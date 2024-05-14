@@ -1,44 +1,42 @@
-import "@testing-library/jest-dom";
-import { render, screen, fireEvent } from "@testing-library/react";
-import ShoppingList from "../components/ShoppingList";
+import React from "react";
+import Item from "./Item";
 
-function isClassComponent(component) {
-  return (
-    typeof component === "function" && !!component.prototype.isReactComponent
-  );
+class ShoppingList extends React.Component {
+  state = {
+    selectedCategory: "All",
+  };
+
+  handleCategoryChange = (event) => {
+    this.setState({ selectedCategory: event.target.value });
+  };
+
+  getItemsToDisplay() {
+    return this.props.items
+      .filter(
+        (item) =>
+          this.state.selectedCategory === "All" ||
+          item.category === this.state.selectedCategory
+      )
+      .map((item) => (
+        <Item key={item.id} name={item.name} category={item.category} />
+      ));
+  }
+
+  render() {
+    return (
+      <div className="ShoppingList">
+        <div className="Filter">
+          <select name="filter" onChange={this.handleCategoryChange}>
+            <option value="All">Filter by category</option>
+            <option value="Produce">Produce</option>
+            <option value="Dairy">Dairy</option>
+            <option value="Dessert">Dessert</option>
+          </select>
+        </div>
+        <ul className="Items">{this.getItemsToDisplay()}</ul>
+      </div>
+    );
+  }
 }
 
-const testData = [
-  { id: 1, name: "Yogurt", category: "Dairy" },
-  { id: 2, name: "Pomegranate", category: "Produce" },
-  { id: 3, name: "Lettuce", category: "Produce" },
-  { id: 4, name: "String Cheese", category: "Dairy" },
-  { id: 5, name: "Cookies", category: "Dessert" },
-];
-
-test("uses a class component", () => {
-  expect(isClassComponent(ShoppingList)).toBe(true);
-});
-
-test("displays all items when initially rendered", () => {
-  const { container } = render(<ShoppingList items={testData} />);
-  expect(container.querySelector(".Items").children).toHaveLength(
-    testData.length
-  );
-});
-
-test("displays only items that match the selected category", () => {
-  const { container } = render(<ShoppingList items={testData} />);
-
-  fireEvent.change(screen.getByRole("combobox"), {
-    target: { value: "Dairy" },
-  });
-
-  expect(container.querySelector(".Items").children).toHaveLength(2);
-
-  fireEvent.change(screen.getByRole("combobox"), {
-    target: { value: "Dessert" },
-  });
-
-  expect(container.querySelector(".Items").children).toHaveLength(1);
-});
+export default ShoppingList;
